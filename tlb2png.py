@@ -37,22 +37,22 @@ print(args.input.name)
 imageCount = struct.unpack("<H", args.input.read(2))[0]
 
 for image in range(imageCount):
-	mode, widthShift, heightShift, bitmapSize = struct.unpack("<LLLL", args.input.read(0x10))
+	type, widthShift, heightShift, bitmapSize = struct.unpack("<LLLL", args.input.read(0x10))
 
-	# Get colors and if there's alpha from the 'mode'
+	# Get colors and if there's alpha from the 'type'
 	colors = 0
 	alpha = False
-	if mode & 0x04:  # Alpha only
+	if type & 0x04:  # Alpha only
 		alpha = True
-	elif mode & 0x10:  # 16 color
+	elif type & 0x10:  # 16 color
 		colors = 16
-	elif (mode & ~0x02) == 0:  # 256 color
+	elif (type & ~0x02) == 0:  # 256 color
 		colors = 256
 	else:
-		print(f"Error: supported mode ({mode})")
+		print(f"Error: supported type ({type})")
 		exit()
 	
-	if mode & 0x02:
+	if type & 0x02:
 		alpha = True
 
 	# For some reason the size is stored so you need to shift 8 to it
