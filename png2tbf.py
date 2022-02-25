@@ -45,5 +45,5 @@ with Image.open(args.input) as img:
 		args.output.write(struct.pack("<H", 1 << 15 | b << 10 | g << 5 | r))
 
 	# If the image is 128x128, write the image data
-	if(img.size == (128, 128)):
+	if img.size == (128, 128):
 		args.output.write(img.tobytes())

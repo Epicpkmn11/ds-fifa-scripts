@@ -29,6 +29,7 @@ import struct
 parser = argparse.ArgumentParser(description="Converts a TLB file to image(s)")
 parser.add_argument("input", metavar="in.tlb", type=argparse.FileType("rb"), help="input file")
 parser.add_argument("output", metavar="out.png", type=str, help="output name")
+parser.add_argument("--alpha", "-a", action="store_true", help="make transparent pixel transparent instead of #FF00FF (may break reverse conversion)")
 
 args = parser.parse_args()
 
@@ -70,7 +71,7 @@ for image in range(imageCount):
 		data = args.input.read(bitmapSize)
 
 	if colors > 0:
-		img = Image.frombytes("L", (width, height), data)
+		img = Image.frombytes("P", (width, height), data)
 
 		# Convert from DS style to normal RGB palette
 		palette = [0] * colors * 3
@@ -81,7 +82,7 @@ for image in range(imageCount):
 			palette[i * 3 + 2] = round(((color >> 10) & 0x1F) * 255 / 31)
 		img.putpalette(palette)
 
-		if alpha:  # set color 0 to transparent
+		if alpha and args.alpha:  # set color 0 to transparent
 			img = img.convert("RGBA")
 			alpha = Image.frombytes("L", (width, height), bytes([0 if x == 0 else 0xFF for x in data]))
 			img.putalpha(alpha)
