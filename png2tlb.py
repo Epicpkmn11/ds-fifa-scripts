@@ -88,14 +88,16 @@ for i, image in enumerate(args.input):
 	args.output.write(struct.pack("<LLLL", type, widthShift, heightShift, bitmapSize))
 
 	# Bitmap data
-	if colors == 16:
+	if colors == 16:  # 16 color
 		data = b""
 		bytes = img.tobytes()
 		for i in range(len(bytes) // 2):
 			lower, upper = bytes[i * 2:i * 2 + 2]
 			data += struct.pack("B", (lower & 0xF) | ((upper & 0xF) << 4))
 		args.output.write(data)
-	else:
+	elif colors > 0:  # 256 color
+		args.output.write(img.tobytes())
+	else:  # alpha
 		args.output.write(img.getchannel("A").tobytes())
 
 	# Palette data
