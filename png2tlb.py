@@ -29,10 +29,13 @@ import struct
 
 parser = argparse.ArgumentParser(description="Converts image(s) to a TLB")
 parser.add_argument("input", metavar="in.png", nargs="*", type=str, help="input image(s)")
-parser.add_argument("output", metavar="out.tlb", type=argparse.FileType("wb"), help="output file")
+parser.add_argument("--output", "-o", metavar="out.tlb", type=argparse.FileType("wb"), help="output file")
 parser.add_argument("--colors", "-c", type=int, help="number of colors in the palette (only used if input is RGB(A))")
 
 args = parser.parse_args()
+
+if not args.output:
+	args.output = open(args.input[0][:args.input[0].rfind(".")] + ".tlb", "wb")
 
 print(" ".join([basename(x) for x in args.input]))
 

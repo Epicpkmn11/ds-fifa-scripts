@@ -29,9 +29,12 @@ import struct
 
 parser = argparse.ArgumentParser(description="Converts an image to a DST")
 parser.add_argument("input", metavar="in.png", type=str, help="input image")
-parser.add_argument("output", metavar="out.dst", type=argparse.FileType("wb"), help="output file")
+parser.add_argument("--output", "-o", metavar="out.dst", type=argparse.FileType("wb"), help="output file")
 
 args = parser.parse_args()
+
+if not args.output:
+	args.output = open(args.input[:args.input.rfind(".")] + ".dst", "wb")
 
 print(basename(args.input))
 

@@ -29,9 +29,12 @@ import struct
 
 parser = argparse.ArgumentParser(description="Converts a TBF file to an image")
 parser.add_argument("input", metavar="in.tbf", type=argparse.FileType("rb"), help="input file")
-parser.add_argument("output", metavar="out.png", type=str, help="output image")
+parser.add_argument("--output", "-o", metavar="out.png", type=str, help="output name")
 
 args = parser.parse_args()
+
+if not args.output:
+	args.output = args.input.name[:args.input.name.rfind(".")] + ".png"
 
 print(args.input.name)
 

@@ -28,10 +28,13 @@ import struct
 
 parser = argparse.ArgumentParser(description="Converts a TLB file to image(s)")
 parser.add_argument("input", metavar="in.tlb", type=argparse.FileType("rb"), help="input file")
-parser.add_argument("output", metavar="out.png", type=str, help="output name")
+parser.add_argument("--output", "-o", metavar="out.png", type=str, help="output name")
 parser.add_argument("--alpha", "-a", action="store_true", help="make transparent pixel transparent instead of #FF00FF (may break reverse conversion)")
 
 args = parser.parse_args()
+
+if not args.output:
+	args.output = args.input.name[:args.input.name.rfind(".")] + ".png"
 
 print(args.input.name)
 
