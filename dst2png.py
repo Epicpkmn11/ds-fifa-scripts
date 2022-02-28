@@ -29,7 +29,6 @@ import struct
 parser = argparse.ArgumentParser(description="Converts a DST file to image(s)")
 parser.add_argument("input", metavar="in.tlb", type=argparse.FileType("rb"), help="input file")
 parser.add_argument("output", metavar="out.png", type=str, help="output name")
-parser.add_argument("--alpha", "-a", action="store_true", help="make transparent pixel transparent instead of #FF00FF (may break reverse conversion)")
 
 args = parser.parse_args()
 
