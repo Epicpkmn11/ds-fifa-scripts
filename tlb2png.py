@@ -52,7 +52,7 @@ for image in range(imageCount):
 	else:
 		print(f"Error: supported type ({type})")
 		exit()
-	
+
 	if type & 0x02:
 		alpha = True
 
