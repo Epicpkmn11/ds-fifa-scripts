@@ -38,10 +38,11 @@ if(args.input.read(4) != b"DST1"):
 	print("Error: Is this really a DST file?")
 	exit()
 
+# First two are currently unknown what they mean
 _, _, width, height, colors = struct.unpack("<LLHHH", args.input.read(0xE))
 bitmapSize = width * height // (2 if colors == 16 else 1)
 
-print(f"{width}x{height}, {colors} colors")  # , {'alpha' if alpha else 'no alpha'}")
+print(f"{width}x{height}, {colors} colors")
 
 if colors > 0:
 	# Convert from DS style to normal RGB palette
