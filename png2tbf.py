@@ -28,9 +28,6 @@ import struct
 from os.path import basename
 from PIL import Image
 
-parser = argparse.ArgumentParser(description="Converts an image to a TBF")
-parser.add_argument("input", metavar="in.png", type=str, help="input image")
-parser.add_argument("--output", "-o", metavar="out.tbf", type=argparse.FileType("wb"), help="output file")
 
 def png2tbf(args):
     print(basename(args.input))
