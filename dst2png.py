@@ -5,14 +5,17 @@
 
 """
 Copyright © 2022 Pk11
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the “Software”), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
+
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
+
 THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,52 +26,56 @@ THE SOFTWARE.
 """
 
 import argparse
-from PIL import Image
 import struct
 
-parser = argparse.ArgumentParser(description="Converts a DST file to image(s)")
-parser.add_argument("input", metavar="in.dst", type=argparse.FileType("rb"), help="input file")
-parser.add_argument("--output", "-o", metavar="out.png", type=str, help="output name")
+from PIL import Image
 
-args = parser.parse_args()
 
-if not args.output:
-	args.output = args.input.name[:args.input.name.rfind(".")] + ".png"
+def dst2png(args):
+    print(args.input.name)
 
-print(args.input.name)
+    if(args.input.read(4) != b"DST1"):
+        print("Error: Is this really a DST file?")
+        exit()
 
-if(args.input.read(4) != b"DST1"):
-	print("Error: Is this really a DST file?")
-	exit()
+    if not args.output:
+        args.output = args.input.name[:args.input.name.rfind(".")] + ".png"
 
-# First two are currently unknown what they mean
-_, _, width, height, colors = struct.unpack("<LLHHH", args.input.read(0xE))
-bitmapSize = width * height // (2 if colors == 16 else 1)
+    # First two are currently unknown what they mean
+    _, _, width, height, colors = struct.unpack("<LLHHH", args.input.read(0xE))
+    bitmapSize = width * height // (2 if colors == 16 else 1)
 
-print(f"{width}x{height}, {colors} colors")
+    print(f"{width}x{height}, {colors} colors")  # , {'alpha' if alpha else 'no alpha'}")
 
-if colors > 0:
-	# Convert from DS style to normal RGB palette
-	palette = [0] * colors * 3
-	for i in range(colors):
-		color = struct.unpack("<H", args.input.read(2))[0]
-		palette[i * 3] = round((color & 0x1F) * 255 / 31)
-		palette[i * 3 + 1] = round(((color >> 5) & 0x1F) * 255 / 31)
-		palette[i * 3 + 2] = round(((color >> 10) & 0x1F) * 255 / 31)
+    if colors > 0:
+        # Convert from DS style to normal RGB palette
+        palette = [0] * colors * 3
+        for i in range(colors):
+            color = struct.unpack("<H", args.input.read(2))[0]
+            palette[i * 3] = round((color & 0x1F) * 255 / 31)
+            palette[i * 3 + 1] = round(((color >> 5) & 0x1F) * 255 / 31)
+            palette[i * 3 + 2] = round(((color >> 10) & 0x1F) * 255 / 31)
 
-	# Get bitmap data, if 16 color then extract the two nibbles
-	data = b""
-	if colors == 16:
-		for byte in args.input.read(bitmapSize):
-			data += struct.pack("BB", byte & 0xF, byte >> 4)
-	else:
-		data = args.input.read(bitmapSize)
+        # Get bitmap data, if 16 color then extract the two nibbles
+        data = b""
+        if colors == 16:
+            for byte in args.input.read(bitmapSize):
+                data += struct.pack("BB", byte & 0xF, byte >> 4)
+        else:
+            data = args.input.read(bitmapSize)
 
-	img = Image.frombytes("P", (width, height), data)
-	img.putpalette(palette)
-else:
-	print("Error: No colors??")
-	exit()
+        img = Image.frombytes("P", (width, height), data)
+        img.putpalette(palette)
+    else:
+        print("Error: No colors??")
+        exit()
 
-# Save the image
-img.save(args.output)
+    # Save the image
+    img.save(args.output)
+
+
+if __name__ == "__main__":
+    dst2pngarg = argparse.ArgumentParser(description="Converts a DST file to image(s)")
+    dst2pngarg.add_argument("input", metavar="in.dst", type=argparse.FileType("rb"), help="input file")
+    dst2pngarg.add_argument("--output", "-o", metavar="out.png", type=str, help="output name")
+    exit(dst2png(dst2pngarg.parse_args()))
