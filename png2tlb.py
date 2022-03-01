@@ -34,15 +34,17 @@ from sys import exit
 
 
 def png2tlb(args):
-    print(" ".join([basename(x) for x in args.input]))
+    print(" ".join([basename(x) for x in args.inputs]))
 
-    if not args.output:
-        args.output = open(args.input[0][:args.input[0].rfind(".")] + ".tlb", "wb")
+    if args.output:
+        output = args.output
+    else:
+        output = open(args.inputs[0][:args.inputs[0].rfind(".")] + ".tlb", "wb")
 
     # Image count
-    args.output.write(struct.pack("<H", len(args.input)))
+    output.write(struct.pack("<H", len(args.inputs)))
 
-    for i, image in enumerate(args.input):
+    for i, image in enumerate(args.inputs):
         img = Image.open(image)
 
         # Quantize if given an RGB(A) image unless alpha only (solid white + alpha)
@@ -88,7 +90,7 @@ def png2tlb(args):
 
         print(f"Image {i}, type 0x{type:X}, shift size {widthShift}x{heightShift}, bitmap 0x{bitmapSize:X} bytes")
 
-        args.output.write(struct.pack("<LLLL", type, widthShift, heightShift, bitmapSize))
+        output.write(struct.pack("<LLLL", type, widthShift, heightShift, bitmapSize))
 
         # Bitmap data
         if colors == 16:  # 16 color
@@ -97,11 +99,11 @@ def png2tlb(args):
             for i in range(len(bytes) // 2):
                 lower, upper = bytes[i * 2:i * 2 + 2]
                 data += struct.pack("B", (lower & 0xF) | ((upper & 0xF) << 4))
-            args.output.write(data)
+            output.write(data)
         elif colors > 0:  # 256 color
-            args.output.write(img.tobytes())
+            output.write(img.tobytes())
         else:  # alpha
-            args.output.write(img.getchannel("A").tobytes())
+            output.write(img.getchannel("A").tobytes())
 
         # Palette data
         if img.palette:
@@ -109,12 +111,12 @@ def png2tlb(args):
             for i in range(len(img.palette.palette) // 3):
                 r, g, b = [round(x * 31 / 255) & 0x1F for x in img.palette.palette[i * 3:i * 3 + 3]]
                 pal += struct.pack("<H", 1 << 15 | b << 10 | g << 5 | r)
-            args.output.write(pal)
+            output.write(pal)
 
 
 if __name__ == "__main__":
     png2tlbarg = argparse.ArgumentParser(description="Converts image(s) to a TLB")
-    png2tlbarg.add_argument("input", metavar="in.png", nargs="*", type=str, help="input image(s)")
+    png2tlbarg.add_argument("inputs", metavar="in.png", nargs="*", type=str, help="input image(s)")
     png2tlbarg.add_argument("--output", "-o", metavar="out.tlb", type=argparse.FileType("wb"), help="output file")
     png2tlbarg.add_argument("--colors", "-c", type=int, help="number of colors in the palette (only used if input is RGB(A))")
     exit(png2tlb(png2tlbarg.parse_args()))

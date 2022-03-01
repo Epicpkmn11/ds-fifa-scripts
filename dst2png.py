@@ -33,50 +33,53 @@ from sys import exit
 
 
 def dst2png(args):
-    print(args.input.name)
+    for input in args.inputs:
+        print(input.name)
 
-    if(args.input.read(4) != b"DST1"):
-        print("Error: Is this really a DST file?")
-        exit()
+        if(input.read(4) != b"DST1"):
+            print("Error: Is this really a DST file?")
+            exit()
 
-    if not args.output:
-        args.output = args.input.name[:args.input.name.rfind(".")] + ".png"
-
-    # First two are currently unknown what they mean
-    _, _, width, height, colors = struct.unpack("<LLHHH", args.input.read(0xE))
-    bitmapSize = width * height // (2 if colors == 16 else 1)
-
-    print(f"{width}x{height}, {colors} colors")  # , {'alpha' if alpha else 'no alpha'}")
-
-    if colors > 0:
-        # Convert from DS style to normal RGB palette
-        palette = [0] * colors * 3
-        for i in range(colors):
-            color = struct.unpack("<H", args.input.read(2))[0]
-            palette[i * 3] = round((color & 0x1F) * 255 / 31)
-            palette[i * 3 + 1] = round(((color >> 5) & 0x1F) * 255 / 31)
-            palette[i * 3 + 2] = round(((color >> 10) & 0x1F) * 255 / 31)
-
-        # Get bitmap data, if 16 color then extract the two nibbles
-        data = b""
-        if colors == 16:
-            for byte in args.input.read(bitmapSize):
-                data += struct.pack("BB", byte & 0xF, byte >> 4)
+        if args.output:
+            output = args.output
         else:
-            data = args.input.read(bitmapSize)
+            output = input.name[:input.name.rfind(".")] + ".png"
 
-        img = Image.frombytes("P", (width, height), data)
-        img.putpalette(palette)
-    else:
-        print("Error: No colors??")
-        exit()
+        # First two are currently unknown what they mean
+        _, _, width, height, colors = struct.unpack("<LLHHH", input.read(0xE))
+        bitmapSize = width * height // (2 if colors == 16 else 1)
 
-    # Save the image
-    img.save(args.output)
+        print(f"{width}x{height}, {colors} colors")  # , {'alpha' if alpha else 'no alpha'}")
+
+        if colors > 0:
+            # Convert from DS style to normal RGB palette
+            palette = [0] * colors * 3
+            for i in range(colors):
+                color = struct.unpack("<H", input.read(2))[0]
+                palette[i * 3] = round((color & 0x1F) * 255 / 31)
+                palette[i * 3 + 1] = round(((color >> 5) & 0x1F) * 255 / 31)
+                palette[i * 3 + 2] = round(((color >> 10) & 0x1F) * 255 / 31)
+
+            # Get bitmap data, if 16 color then extract the two nibbles
+            data = b""
+            if colors == 16:
+                for byte in input.read(bitmapSize):
+                    data += struct.pack("BB", byte & 0xF, byte >> 4)
+            else:
+                data = input.read(bitmapSize)
+
+            img = Image.frombytes("P", (width, height), data)
+            img.putpalette(palette)
+        else:
+            print("Error: No colors??")
+            exit()
+
+        # Save the image
+        img.save(output)
 
 
 if __name__ == "__main__":
     dst2pngarg = argparse.ArgumentParser(description="Converts a DST file to image(s)")
-    dst2pngarg.add_argument("input", metavar="in.dst", type=argparse.FileType("rb"), help="input file")
+    dst2pngarg.add_argument("inputs", metavar="in.dst", nargs="*", type=argparse.FileType("rb"), help="input file(s)")
     dst2pngarg.add_argument("--output", "-o", metavar="out.png", type=str, help="output name")
     exit(dst2png(dst2pngarg.parse_args()))
