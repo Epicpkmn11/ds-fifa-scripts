@@ -34,7 +34,6 @@ def png2tbf(args):
     for input in args.inputs:
         print(basename(input))
 
-
         with Image.open(input) as img:
             if args.output:
                 output = args.output
