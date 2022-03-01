@@ -34,12 +34,16 @@ def png2tbf(args):
     for input in args.inputs:
         print(basename(input))
 
-        if args.output:
-            output = args.output
-        else:
-            output = open(input[:input.rfind(".")] + ".tbf", "wb")
 
         with Image.open(input) as img:
+            if args.output:
+                output = args.output
+            else:
+                if img.size == (96, 122):  # wclogo.bin
+                    output = open(input[:input.rfind(".")] + ".bin", "wb")
+                else:
+                    output = open(input[:input.rfind(".")] + ".tbf", "wb")
+
             if img.mode != "P":
                 img = img.convert("RGB").quantize(256)
 
@@ -49,12 +53,15 @@ def png2tbf(args):
                 output.write(struct.pack("<H", 1 << 15 | b << 10 | g << 5 | r))
 
             # If the image is 128x128, write the image data
-            if img.size == (128, 128):
+            if img.size == (128, 128) or img.size == (96, 122):
                 output.write(img.tobytes())
+            else:
+                print("Error: Incorrect size")
+                exit(1)
 
 
 if __name__ == "__main__":
     png2tbfarg = argparse.ArgumentParser(description="Converts an image to a TBF")
-    png2tbfarg.add_argument("inputs", metavar="in.png", nargs="*",type=str, help="input image(s)")
+    png2tbfarg.add_argument("inputs", metavar="in.png", nargs="*", type=str, help="input image(s)")
     png2tbfarg.add_argument("--output", "-o", metavar="out.tbf", type=argparse.FileType("wb"), help="output file")
     exit(png2tbf(png2tbfarg.parse_args()))

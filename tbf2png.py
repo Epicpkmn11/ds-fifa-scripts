@@ -44,14 +44,17 @@ def tbf2png(args):
 
         # Check file size
         input.seek(0, SEEK_END)
-        size = input.tell()
+        fsize = input.tell()
         input.seek(0, SEEK_SET)
 
         # Either a 16 or 256 color palette, sometimes bitmap data sometimes not
-        if (size % 0x4000) == 0x20:
+        if (fsize % 0x4000) == 0x20:
             colors = 16
-        elif (size % 0x4000) == 0x200:
+        elif (fsize % 0x4000) == 0x200 or fsize == 0x2FC0:
             colors = 256
+        else:
+            print("Error: Is this a TBF?")
+            exit(1)
 
         # Get palette
         palette = [0] * colors * 3  # 256 color palette with RGB separated
@@ -61,8 +64,10 @@ def tbf2png(args):
             palette[i * 3 + 1] = round(((color >> 5) & 0x1F) * 255 / 31)
             palette[i * 3 + 2] = round(((color >> 10) & 0x1F) * 255 / 31)
 
-        # If there's bitmap data it's a 128x128 image
-        if size > 0x4000:
+        if fsize == 0x2FC0:  # Special case, wclogo.bin
+            size = (96, 122)
+            data = input.read()
+        elif fsize > 0x4000:  # If there's bitmap data it's a 128x128 image
             size = (128, 128)
             data = input.read()
         else:  # Otherwise just put the colors
@@ -76,7 +81,7 @@ def tbf2png(args):
 
 
 if __name__ == "__main__":
-    tbf2pngarg = argparse.ArgumentParser(description="Converts a TBF file to an image")
+    tbf2pngarg = argparse.ArgumentParser(description="Converts a TBF file (or wclogo.bin) to an image")
     tbf2pngarg.add_argument("inputs", metavar="in.tbf", nargs="*", type=argparse.FileType("rb"), help="input file(s)")
     tbf2pngarg.add_argument("--output", "-o", metavar="out.png", type=str, help="output name")
     exit(tbf2png(tbf2pngarg.parse_args()))
