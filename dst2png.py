@@ -29,6 +29,7 @@ import argparse
 import struct
 
 from PIL import Image
+from sys import exit
 
 
 def dst2png(args):

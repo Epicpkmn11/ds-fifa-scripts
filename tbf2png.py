@@ -30,6 +30,7 @@ import struct
 
 from os import SEEK_END, SEEK_SET
 from PIL import Image
+from sys import exit
 
 
 def tbf2png(args):

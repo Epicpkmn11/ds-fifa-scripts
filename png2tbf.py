@@ -27,6 +27,7 @@ import struct
 
 from os.path import basename
 from PIL import Image
+from sys import exit
 
 
 def png2tbf(args):
