@@ -46,10 +46,12 @@ def dst2png(args):
             output = input.name[:input.name.rfind(".")] + ".png"
 
         # First two are currently unknown what they mean
-        _, _, width, height, colors = struct.unpack("<LLHHH", input.read(0xE))
+        _, _, width, height, flags = struct.unpack("<LLHHH", input.read(0xE))
+        alpha = flags & 1  # these are just guesses
+        colors = 16 if flags & 0x10 else 256
         bitmapSize = width * height // (2 if colors == 16 else 1)
 
-        print(f"{width}x{height}, {colors} colors")  # , {'alpha' if alpha else 'no alpha'}")
+        print(f"{width}x{height}, {colors} colors {'alpha' if alpha else 'no alpha'}")
 
         if colors > 0:
             # Convert from DS style to normal RGB palette
